@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[project]
+name = "order-and-inventory-service-project"
+version = "0.1.0"
+description = "REST API for ordering"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "gunicorn",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "psycopg[binary]",
+    "alembic",
+    "pydantic",
+    "pydantic-settings",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "bcrypt<4.1",
+    "redis",
+    "jinja2",
+    "apscheduler",
+    "structlog",
+    "httpx",
+    "slowapi",
+]
+
+[project.optional-dependencies]
+# Dev-only tools. Installed with:  pip install -e ".[dev]"
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "factory-boy",
+    "testcontainers",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Rule groups we enforce:
+#   E  = pycodestyle errors      (style)
+#   F  = pyflakes                (unused imports/vars, undefined names)
+#   I  = isort                   (import ordering)
+#   UP = pyupgrade               (modernize syntax for the target py version)
+#   B  = flake8-bugbear          (likely-bug patterns)
+select = ["E", "F", "I", "UP", "B"]
+
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.Header",
+    "fastapi.Security",
+]
+
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true      # Every function must have type annotations.
+ignore_missing_imports = true     # Don't fail on 3rd-party libs that ship no type stubs.
+warn_unused_ignores = true        # Flag `# type: ignore` comments that are no longer needed.
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto
+testpaths = ["tests"]
