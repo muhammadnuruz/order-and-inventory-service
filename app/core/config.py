@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    # --- General app metadata -------------------------------------------------
+    PROJECT_NAME: str = "Blog + Users API"
+    VERSION: str = "0.1.0"
+    ENVIRONMENT: str = "local"  # "local" | "staging" | "production"
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
+    API_V1_PREFIX: str = "/api/v1"
+
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/db_name"
+    SYNC_DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@db:5432/db_name"
+
+    REDIS_URL: str = "redis://localhost:6379/0"
+
+    JWT_SECRET: str = "Change-Me-In-Production"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+
+    CORS_ORIGINS: list[str] = ["*"]
+    ALLOWED_HOSTS: list[str] = ["*"]
+    RATE_LIMIT: str = "100/minute"
+
+    RUN_SCHEDULER: bool = False
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def _split_comma_separated(cls, value: object) -> object:
+        "Allow `CORS_ORIGINS=https://a.com,https://b.com` style env vars instead of requiring JSON-encoded lists."
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+settings = Settings()
