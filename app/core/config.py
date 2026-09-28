@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -26,8 +28,8 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
-    CORS_ORIGINS: list[str] = ["*"]
-    ALLOWED_HOSTS: list[str] = ["*"]
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = ["*"]
+    ALLOWED_HOSTS: Annotated[list[str], NoDecode] = ["*"]
     RATE_LIMIT: str = "100/minute"
 
     RUN_SCHEDULER: bool = False
