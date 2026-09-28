@@ -77,5 +77,5 @@ warn_unused_ignores = true        # Flag `# type: ignore` comments that are no l
 
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto
+asyncio_mode = "auto"
 testpaths = ["tests"]
