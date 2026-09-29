@@ -18,6 +18,6 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     orders: Mapped[list[Order]] = relationship(
-        "Order", back_populates="customer"
+        "Order", back_populates="user"
     )
 
