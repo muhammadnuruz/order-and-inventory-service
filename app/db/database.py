@@ -24,6 +24,12 @@ async def create_pool(dsn: str | None = None) -> asyncpg.Pool:
     )
 
 
+async def connect(dsn: str | None = None) -> asyncpg.Connection:
+    conn = await asyncpg.connect(dsn or settings.DATABASE_URL)
+    await _init_connection(conn)
+    return conn
+
+
 async def init_pool() -> None:
     global _pool
     if _pool is None:
