@@ -1,5 +1,5 @@
 
-.PHONY: install dev lint format typecheck test up migrate makemigration
+.PHONY: install dev lint format typecheck test up down migrate makemigration
 
 # Install the project plus dev tooling in editable mode.
 install:
@@ -25,9 +25,12 @@ typecheck:
 test:
 	pytest
 
-# Start the full stack (db, redis, api, worker, beat, nginx) via Docker.
+# Start the full stack (db, redis, api, worker, beat, nginx) on http://localhost:8080.
 up:
 	docker compose up --build
+
+down:
+	docker compose down -v
 
 # Apply all pending database migrations up to the latest revision.
 migrate:
