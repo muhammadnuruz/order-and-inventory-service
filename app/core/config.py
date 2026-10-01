@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 
     ORDER_EXPIRE_MINUTES: int = 15
     IDEMPOTENCY_KEY_TTL_HOURS: int = 24
+    EXPIRE_ORDERS_INTERVAL_SECONDS: int = 30
+    EXPIRE_ORDERS_BATCH_SIZE: int = 100
 
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
@@ -39,8 +41,6 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["*"]
     ALLOWED_HOSTS: Annotated[list[str], NoDecode] = ["*"]
     RATE_LIMIT: str = "100/minute"
-
-    RUN_SCHEDULER: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

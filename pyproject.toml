@@ -26,7 +26,7 @@ dependencies = [
     "bcrypt<4.1",
     "redis",
     "jinja2",
-    "apscheduler",
+    "celery[redis]",
     "structlog",
     "httpx",
     "python-multipart",
