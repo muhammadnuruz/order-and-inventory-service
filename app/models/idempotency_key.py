@@ -4,7 +4,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 class IdempotencyStatus(str, Enum):
     PROCESSING = "processing"
     COMPLETED = "completed"
-    FAILED = "failed"
 
 
 class IdempotencyKey(Base):
@@ -26,6 +25,7 @@ class IdempotencyKey(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "key", name="uq_idempotency_keys_user_id_key"),
+        Index("ix_idempotency_keys_created_at", "created_at"),
     )
 
     user_id: Mapped[int] = mapped_column(

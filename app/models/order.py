@@ -5,7 +5,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, Numeric
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -17,14 +18,24 @@ if TYPE_CHECKING:
 
 class OrderStatus(str, Enum):
     PENDING = "pending"
-    PAID = "paid"
-    SHIPPED = "shipped"
-    DELIVERED = "delivered"
+    CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
 
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING', 'CONFIRMED', 'CANCELLED')", name="ck_orders_status"
+        ),
+        CheckConstraint("total_price >= 0", name="ck_orders_total_price_non_negative"),
+        Index("ix_orders_user_id", "user_id"),
+        Index(
+            "ix_orders_pending_expires_at",
+            "expires_at",
+            postgresql_where=text("status = 'PENDING'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
@@ -39,9 +50,7 @@ class Order(Base):
         nullable=False
     )
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     confirmed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -50,6 +59,10 @@ class Order(Base):
     )
 
     items: Mapped[list[OrderItem]] = relationship(
-        "OrderItem", back_populates="order", cascade="all, delete-orphan"
+        "OrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="OrderItem.product_id",
     )
 
