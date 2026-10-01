@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     DB_COMMAND_TIMEOUT: float = 10.0
 
     REDIS_URL: str = "redis://localhost:6379/0"
+    PRODUCT_CACHE_TTL_SECONDS: int = 300
+    PRODUCT_LIST_CACHE_TTL_SECONDS: int = 60
+    ORDER_CACHE_TTL_SECONDS: int = 60
 
     JWT_SECRET: str = "Change-Me-In-Production"
     JWT_ALGORITHM: str = "HS256"
