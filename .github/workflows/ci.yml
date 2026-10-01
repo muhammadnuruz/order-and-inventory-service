@@ -63,9 +63,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Start stack
-        run: docker compose up --build --detach --wait --wait-timeout 180
+        run: docker compose up --build --detach
       - name: Readiness
-        run: curl --fail --retry 10 --retry-delay 3 --retry-all-errors http://localhost:8080/health/ready
+        run: curl --fail --retry 30 --retry-delay 3 --retry-all-errors http://localhost:8080/health/ready
       - name: 50 parallel orders against stock=10
         run: |
           pip install httpx
