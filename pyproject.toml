@@ -18,7 +18,7 @@ dependencies = [
     "asyncpg",
     "psycopg[binary]",
     "alembic",
-    "pydantic",
+    "pydantic[email]",
     "pydantic-settings",
     "python-jose[cryptography]",
     "passlib[bcrypt]",
@@ -28,6 +28,7 @@ dependencies = [
     "apscheduler",
     "structlog",
     "httpx",
+    "python-multipart",
     "slowapi",
 ]
 
