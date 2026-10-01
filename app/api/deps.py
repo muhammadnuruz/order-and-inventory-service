@@ -4,21 +4,35 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache.redis import is_jti_denied
+from app.cache.cache import RedisCache
+from app.cache.redis import is_jti_denied, redis_client
 from app.core.config import settings
 from app.core.exceptions import AuthError
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.models.user import User
+from app.repositories.product import ProductRepository
 from app.repositories.user import UserRepository
 from app.schemas.token import TokenPayload
 from app.services.auth import AuthService
+from app.services.product import ProductService
 
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")
 
 
 def get_user_repo(session: AsyncSession = Depends(get_session)) -> UserRepository:
     return UserRepository(session)
+
+
+def get_cache() -> RedisCache:
+    return RedisCache(redis_client)
+
+
+def get_product_service(
+    session: AsyncSession = Depends(get_session),
+    cache: RedisCache = Depends(get_cache),
+) -> ProductService:
+    return ProductService(session, ProductRepository(session), cache)
 
 
 def get_auth_service(users: UserRepository = Depends(get_user_repo)) -> AuthService:
