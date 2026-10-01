@@ -32,7 +32,7 @@ class ProductRepository:
         )
         return Product.from_record(record) if record else None
 
-    async def list(self, skip: int, limit: int) -> list[Product]:
+    async def get_page(self, skip: int, limit: int) -> list[Product]:
         records = await self.conn.fetch(
             f"SELECT {_COLUMNS} FROM products ORDER BY id DESC OFFSET $1 LIMIT $2",
             skip,

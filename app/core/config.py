@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", mode="before")
     @classmethod
     def _split_comma_separated(cls, value: object) -> object:
-        "Allow `CORS_ORIGINS=https://a.com,https://b.com` style env vars instead of requiring JSON-encoded lists."
+        "Allow `CORS_ORIGINS=https://a.com,https://b.com` instead of a JSON-encoded list."
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
