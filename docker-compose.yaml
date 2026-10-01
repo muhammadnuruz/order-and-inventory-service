@@ -1,17 +1,30 @@
+x-app-env: &app-env
+  ENVIRONMENT: ${ENVIRONMENT:-production}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-order_and_inventory_db}
+  SYNC_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-order_and_inventory_db}
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me}
+  ORDER_EXPIRE_MINUTES: ${ORDER_EXPIRE_MINUTES:-15}
+  EXPIRE_ORDERS_INTERVAL_SECONDS: ${EXPIRE_ORDERS_INTERVAL_SECONDS:-30}
+  RATE_LIMIT: ${RATE_LIMIT:-100/minute}
+
 services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: order_and_inventory_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-order_and_inventory_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7
@@ -19,12 +32,12 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   api:
     build: .
-    env_file: .env
     environment:
+      <<: *app-env
       FORWARDED_ALLOW_IPS: "*"
     expose:
       - "8000"
@@ -36,30 +49,33 @@ services:
 
   worker:
     build: .
-    command: celery -A app.tasks.celery_app.celery_app worker --loglevel=info
-    env_file: .env
+    command: celery -A app.tasks.celery_app.celery_app worker --loglevel=info --concurrency=2
+    environment: *app-env
+    healthcheck:
+      disable: true
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
+      api:
         condition: service_healthy
 
   beat:
     build: .
-    command: celery -A app.tasks.celery_app.celery_app beat --loglevel=info
-    env_file: .env
+    command: celery -A app.tasks.celery_app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    environment: *app-env
+    healthcheck:
+      disable: true
     depends_on:
-      redis:
+      api:
         condition: service_healthy
 
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "${APP_PORT:-8080}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:
