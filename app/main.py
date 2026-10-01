@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -21,6 +22,8 @@ from app.core.logging import configure_logging, get_logger
 from app.core.middleware import AccessLogMiddleware, RequestIDMiddleware
 from app.core.rate_limit import limiter
 from app.db.session import engine
+from app.websocket.events import listen_for_events
+from app.websocket.manager import manager
 
 configure_logging(settings.ENVIRONMENT, settings.LOG_LEVEL)
 log = get_logger(__name__)
@@ -28,8 +31,11 @@ log = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    events_listener = asyncio.create_task(listen_for_events(redis_client, manager))
     log.info("app.startup", environment=settings.ENVIRONMENT)
     yield
+    events_listener.cancel()
+    await asyncio.gather(events_listener, return_exceptions=True)
     await close_redis()
     await engine.dispose()
     log.info("app.shutdown")
