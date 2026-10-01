@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 5
 
     REDIS_URL: str = "redis://localhost:6379/0"
+    PRODUCT_CACHE_TTL_SECONDS: int = 300
+    PRODUCT_LIST_CACHE_TTL_SECONDS: int = 60
+    ORDER_CACHE_TTL_SECONDS: int = 60
 
     JWT_SECRET: str = "Change-Me-In-Production"
     JWT_ALGORITHM: str = "HS256"
