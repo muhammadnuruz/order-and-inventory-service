@@ -17,7 +17,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    orders: Mapped[list[Order]] = relationship(
-        "Order", back_populates="user"
-    )
-
+    orders: Mapped[list[Order]] = relationship("Order", back_populates="user")

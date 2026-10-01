@@ -19,16 +19,17 @@ dependencies = [
     "asyncpg",
     "psycopg[binary]",
     "alembic",
-    "pydantic",
+    "pydantic[email]",
     "pydantic-settings",
     "python-jose[cryptography]",
     "passlib[bcrypt]",
     "bcrypt<4.1",
     "redis",
     "jinja2",
-    "apscheduler",
+    "celery[redis]",
     "structlog",
     "httpx",
+    "python-multipart",
     "slowapi",
 ]
 
@@ -47,6 +48,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 # Rule groups we enforce:
