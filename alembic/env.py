@@ -5,8 +5,6 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 from app.core.config import settings
-from app.db.base import Base
-import app.models
 
 # Alembic Config object — gives access to values in alembic.ini.
 config = context.config
@@ -19,8 +17,8 @@ config.set_main_option("sqlalchemy.url", settings.SYNC_DATABASE_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# The metadata Alembic diffs against to autogenerate migrations.
-target_metadata = Base.metadata
+# No ORM metadata: migrations are written by hand as plain SQL.
+target_metadata = None
 
 
 def run_migrations_offline() -> None:

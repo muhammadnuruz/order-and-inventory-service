@@ -33,7 +33,7 @@ up:
 migrate:
 	alembic upgrade head
 
-# Autogenerate a new migration from model changes.
+# Create an empty migration to fill with raw SQL.
 # Usage:  make makemigration m="add users table"
 makemigration:
-	alembic revision --autogenerate -m "$(m)"
+	alembic revision -m "$(m)"
