@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as redis
 
 from app.core.config import settings
 
-redis_client = redis.from_url(settings.REDIS_URL)
+redis_client: redis.Redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 
-async def init_cache() -> None:
-    FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
-
-
-async def close_cache() -> None:
+async def close_redis() -> None:
     await redis_client.aclose()
 
 
@@ -28,7 +22,3 @@ async def deny_jti(jti: str, ttl_seconds: int) -> None:
 
 async def is_jti_denied(jti: str) -> bool:
     return bool(await redis_client.exists(f"{_DENYLIST_PREFIX}{jti}"))
-
-
-async def invalidate_posts_cache() -> None:
-    await FastAPICache.clear(namespace="posts")
