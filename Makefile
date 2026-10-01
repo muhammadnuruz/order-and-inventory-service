@@ -1,5 +1,5 @@
 
-.PHONY: install dev lint format typecheck test up down migrate makemigration
+.PHONY: install dev lint format typecheck test up down migrate makemigration load-test
 
 # Install the project plus dev tooling in editable mode.
 install:
@@ -21,7 +21,7 @@ format:
 typecheck:
 	mypy app
 
-# Run the test suite.
+# Run the test suite. Integration tests use TEST_DATABASE_URL, or a postgres testcontainer.
 test:
 	pytest
 
@@ -40,3 +40,7 @@ migrate:
 # Usage:  make makemigration m="add users table"
 makemigration:
 	alembic revision -m "$(m)"
+
+# Fire 50 parallel orders at a product with stock=10 against the running stack.
+load-test:
+	python scripts/load_test.py --base-url http://localhost:8080 --requests 50 --stock 10
