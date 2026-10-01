@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Enum as SQLEnum
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class IdempotencyStatus(str, Enum):
+class IdempotencyStatus(StrEnum):
     PROCESSING = "processing"
     COMPLETED = "completed"
 
@@ -29,7 +29,8 @@ class IdempotencyKey(Base):
     )
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     key: Mapped[str] = mapped_column(String(255), nullable=False)
 

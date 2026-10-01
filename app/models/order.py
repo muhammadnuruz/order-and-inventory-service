@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, text
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
@@ -25,9 +25,7 @@ class OrderStatus(str, Enum):
 class Order(Base):
     __tablename__ = "orders"
     __table_args__ = (
-        CheckConstraint(
-            "status IN ('PENDING', 'CONFIRMED', 'CANCELLED')", name="ck_orders_status"
-        ),
+        CheckConstraint("status IN ('PENDING', 'CONFIRMED', 'CANCELLED')", name="ck_orders_status"),
         CheckConstraint("total_price >= 0", name="ck_orders_total_price_non_negative"),
         Index("ix_orders_user_id", "user_id"),
         Index(
@@ -43,20 +41,14 @@ class Order(Base):
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
     user: Mapped[User] = relationship("User", back_populates="orders")
-    
+
     status: Mapped[OrderStatus] = mapped_column(
-        SQLEnum(OrderStatus, native_enum=False),
-        default=OrderStatus.PENDING,
-        nullable=False
+        SQLEnum(OrderStatus, native_enum=False), default=OrderStatus.PENDING, nullable=False
     )
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    confirmed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    cancelled_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     items: Mapped[list[OrderItem]] = relationship(
         "OrderItem",
@@ -65,4 +57,3 @@ class Order(Base):
         lazy="selectin",
         order_by="OrderItem.product_id",
     )
-
