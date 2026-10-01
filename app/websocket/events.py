@@ -28,7 +28,11 @@ class EventPublisher:
     async def stock_changed(self, stock: dict[int, int]) -> None:
         for product_id, stock_quantity in sorted(stock.items()):
             await self.publish(
-                {"event": "stock_changed", "product_id": product_id, "stock_quantity": stock_quantity}
+                {
+                    "event": "stock_changed",
+                    "product_id": product_id,
+                    "stock_quantity": stock_quantity,
+                }
             )
 
 

@@ -81,9 +81,7 @@ class OrderService:
                 items.append(OrderItem(product_id, quantity, unit_price))
 
             total = sum((item.unit_price * item.quantity for item in items), Decimal("0"))
-            order = await self.orders.create(
-                user_id, total, settings.ORDER_EXPIRE_MINUTES, items
-            )
+            order = await self.orders.create(user_id, total, settings.ORDER_EXPIRE_MINUTES, items)
             body = OrderRead.model_validate(order)
             await self.idempotency_keys.complete(
                 key_id, status.HTTP_201_CREATED, body.model_dump(mode="json"), order.id

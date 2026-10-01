@@ -47,7 +47,7 @@ class ProductService:
         if cached is not None:
             return ProductPage.model_validate(cached)
 
-        items = await self.products.list(skip=skip, limit=limit)
+        items = await self.products.get_page(skip=skip, limit=limit)
         total = await self.products.count()
         page = ProductPage(
             items=[ProductRead.model_validate(item) for item in items],
