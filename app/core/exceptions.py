@@ -31,9 +31,14 @@ class ForbiddenError(AppError):
     status_code = 403
 
 
-class PreconditionFailedError(AppError):
-    code = "precondition_failed"
-    status_code = 412
+class InsufficientStockError(AppError):
+    code = "insufficient_stock"
+    status_code = 409
+
+
+class InvalidOrderStateError(AppError):
+    code = "invalid_order_state"
+    status_code = 409
 
 
 class InvalidIdempotencyKeyError(AppError):

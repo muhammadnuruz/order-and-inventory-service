@@ -42,3 +42,48 @@ class ProductRepository:
 
     async def count(self) -> int:
         return await self.conn.fetchval("SELECT count(*) FROM products")
+
+    async def exists(self, product_id: int) -> bool:
+        return await self.conn.fetchval(
+            "SELECT EXISTS (SELECT 1 FROM products WHERE id = $1)", product_id
+        )
+
+    async def reserve_stock(self, product_id: int, quantity: int) -> tuple[Decimal, int] | None:
+        record = await self.conn.fetchrow(
+            """
+            UPDATE products
+            SET stock_quantity = stock_quantity - $2
+            WHERE id = $1 AND stock_quantity >= $2
+            RETURNING price, stock_quantity
+            """,
+            product_id,
+            quantity,
+        )
+        return (record["price"], record["stock_quantity"]) if record else None
+
+    async def release_stock_for_orders(self, order_ids: list[int]) -> dict[int, int]:
+        await self.conn.execute(
+            """
+            SELECT id FROM products
+            WHERE id IN (SELECT product_id FROM order_items WHERE order_id = ANY($1::int[]))
+            ORDER BY id
+            FOR UPDATE
+            """,
+            order_ids,
+        )
+        records = await self.conn.fetch(
+            """
+            UPDATE products AS p
+            SET stock_quantity = p.stock_quantity + r.quantity
+            FROM (
+                SELECT product_id, sum(quantity) AS quantity
+                FROM order_items
+                WHERE order_id = ANY($1::int[])
+                GROUP BY product_id
+            ) AS r
+            WHERE p.id = r.product_id
+            RETURNING p.id, p.stock_quantity
+            """,
+            order_ids,
+        )
+        return {record["id"]: record["stock_quantity"] for record in records}
