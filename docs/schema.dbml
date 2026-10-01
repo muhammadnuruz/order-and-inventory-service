@@ -1,0 +1,74 @@
+// Paste into https://dbdiagram.io/d to render the diagram.
+
+Project order_and_inventory {
+  database_type: 'PostgreSQL'
+  Note: 'Concurrent order & inventory reservation service'
+}
+
+Table users {
+  id serial [pk]
+  email varchar(255) [not null, unique]
+  hashed_password varchar(255) [not null]
+  is_active boolean [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table products {
+  id serial [pk]
+  name varchar(255) [not null]
+  price numeric(10,2) [not null, note: 'CHECK (price >= 0)']
+  stock_quantity integer [not null, note: 'CHECK (stock_quantity >= 0) - last line of defense against overselling']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table orders {
+  id serial [pk]
+  user_id integer [not null, ref: > users.id]
+  status varchar(16) [not null, default: 'pending', note: "CHECK (status IN ('pending', 'confirmed', 'cancelled'))"]
+  total_price numeric(10,2) [not null, note: 'CHECK (total_price >= 0)']
+  expires_at timestamptz [not null, note: 'created_at + 15 minutes']
+  confirmed_at timestamptz
+  cancelled_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    user_id [name: 'ix_orders_user_id']
+    expires_at [name: 'ix_orders_pending_expires_at', note: "partial: WHERE status = 'pending'"]
+  }
+}
+
+Table order_items {
+  id serial [pk]
+  order_id integer [not null, ref: > orders.id]
+  product_id integer [not null, ref: > products.id]
+  quantity integer [not null, note: 'CHECK (quantity > 0)']
+  unit_price numeric(10,2) [not null, note: 'price snapshot at order time']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (order_id, product_id) [unique, name: 'uq_order_items_order_id_product_id']
+    product_id [name: 'ix_order_items_product_id']
+  }
+}
+
+Table idempotency_keys {
+  id serial [pk]
+  user_id integer [not null, ref: > users.id]
+  key varchar(255) [not null]
+  request_hash varchar(64) [not null, note: 'sha256 of the normalized request body']
+  status varchar(16) [not null, default: 'processing', note: "CHECK (status IN ('processing', 'completed'))"]
+  response_code integer
+  response_body jsonb
+  order_id integer [ref: > orders.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, key) [unique, name: 'uq_idempotency_keys_user_id_key']
+    created_at [name: 'ix_idempotency_keys_created_at']
+  }
+}
