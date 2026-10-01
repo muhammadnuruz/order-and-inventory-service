@@ -1,55 +1,35 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
-from typing import TYPE_CHECKING
+from enum import StrEnum
+from typing import Any
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
-
-if TYPE_CHECKING:
-    from app.models.order_item import OrderItem
-    from app.models.user import User
+from app.models.order_item import OrderItem
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     PENDING = "pending"
-    PAID = "paid"
-    SHIPPED = "shipped"
-    DELIVERED = "delivered"
+    CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
 
 
-class Order(Base):
-    __tablename__ = "orders"
+@dataclass(slots=True)
+class Order:
+    id: int
+    user_id: int
+    status: OrderStatus
+    total_price: Decimal
+    expires_at: datetime
+    confirmed_at: datetime | None
+    cancelled_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    items: list[OrderItem] = field(default_factory=list)
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
-    )
-    user: Mapped[User] = relationship("User", back_populates="orders")
-    
-    status: Mapped[OrderStatus] = mapped_column(
-        SQLEnum(OrderStatus, native_enum=False),
-        default=OrderStatus.PENDING,
-        nullable=False
-    )
-    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    confirmed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    cancelled_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-
-    items: Mapped[list[OrderItem]] = relationship(
-        "OrderItem", back_populates="order", cascade="all, delete-orphan"
-    )
-
+    @classmethod
+    def from_record(cls, record: Any, items: list[OrderItem] | None = None) -> Order:
+        data = dict(record)
+        data["status"] = OrderStatus(data["status"])
+        return cls(**data, items=items or [])

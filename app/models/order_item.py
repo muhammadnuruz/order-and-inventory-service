@@ -1,32 +1,20 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING
-
-from sqlalchemy import ForeignKey, Integer, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
-
-if TYPE_CHECKING:
-    from app.models.order import Order
-    from app.models.product import Product
+from typing import Any
 
 
-class OrderItem(Base):
-    __tablename__ = "order_items"
+@dataclass(slots=True, frozen=True)
+class OrderItem:
+    product_id: int
+    quantity: int
+    unit_price: Decimal
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    order_id: Mapped[int] = mapped_column(
-        ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
-    )
-    product_id: Mapped[int] = mapped_column(
-        ForeignKey("products.id", ondelete="RESTRICT"), nullable=False
-    )
-
-    quantity: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-
-    order: Mapped[Order] = relationship("Order", back_populates="items")
-    product: Mapped[Product] = relationship("Product", back_populates="order_items")
+    @classmethod
+    def from_record(cls, record: Any) -> OrderItem:
+        return cls(
+            product_id=record["product_id"],
+            quantity=record["quantity"],
+            unit_price=record["unit_price"],
+        )

@@ -1,51 +1,38 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import TYPE_CHECKING, Any
-
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base import Base
-
-if TYPE_CHECKING:
-    from app.models.order import Order
-    from app.models.user import User
+from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
+from typing import Any
 
 
-class IdempotencyStatus(str, Enum):
+class IdempotencyStatus(StrEnum):
     PROCESSING = "processing"
     COMPLETED = "completed"
-    FAILED = "failed"
 
 
-class IdempotencyKey(Base):
-    __tablename__ = "idempotency_keys"
+@dataclass(slots=True, frozen=True)
+class IdempotencyKey:
+    id: int
+    user_id: int
+    key: str
+    request_hash: str
+    status: IdempotencyStatus
+    response_code: int | None
+    response_body: dict[str, Any] | None
+    order_id: int | None
+    created_at: datetime
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "key", name="uq_idempotency_keys_user_id_key"),
-    )
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
-    )
-    key: Mapped[str] = mapped_column(String(255), nullable=False)
-
-    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-
-    status: Mapped[IdempotencyStatus] = mapped_column(
-        SQLEnum(IdempotencyStatus, native_enum=False),
-        default=IdempotencyStatus.PROCESSING,
-        nullable=False,
-    )
-    response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    response_body: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-
-    order_id: Mapped[int | None] = mapped_column(
-        ForeignKey("orders.id", ondelete="SET NULL"), nullable=True
-    )
-
-    user: Mapped[User] = relationship("User")
-    order: Mapped[Order | None] = relationship("Order")
+    @classmethod
+    def from_record(cls, record: Any) -> IdempotencyKey:
+        return cls(
+            id=record["id"],
+            user_id=record["user_id"],
+            key=record["key"],
+            request_hash=record["request_hash"],
+            status=IdempotencyStatus(record["status"]),
+            response_code=record["response_code"],
+            response_body=record["response_body"],
+            order_id=record["order_id"],
+            created_at=record["created_at"],
+        )
