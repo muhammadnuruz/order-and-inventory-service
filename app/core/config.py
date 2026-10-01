@@ -8,15 +8,18 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 class Settings(BaseSettings):
     # --- General app metadata -------------------------------------------------
-    PROJECT_NAME: str = "Blog + Users API"
+    PROJECT_NAME: str = "Order & Inventory Service"
     VERSION: str = "0.1.0"
     ENVIRONMENT: str = "local"  # "local" | "staging" | "production"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     API_V1_PREFIX: str = "/api/v1"
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/db_name"
-    SYNC_DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@db:5432/db_name"
+    DATABASE_URL: str = "postgresql://postgres:postgres@db:5432/order_and_inventory_db"
+    SYNC_DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@db:5432/order_and_inventory_db"
+    DB_POOL_MIN_SIZE: int = 2
+    DB_POOL_MAX_SIZE: int = 10
+    DB_COMMAND_TIMEOUT: float = 10.0
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -43,5 +46,6 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
+
 
 settings = Settings()
