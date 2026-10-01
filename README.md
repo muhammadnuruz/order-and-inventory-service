@@ -304,8 +304,8 @@ Rules:
 
 ## Database schema
 
-Source for [dbdiagram.io](https://dbdiagram.io/d): [`docs/schema.dbml`](docs/schema.dbml).
-Paste it into the editor to get the diagram.
+Diagram: https://dbdiagram.io/d/6aa03c2228e65f9ec2515b2d
+(source: [`docs/schema.dbml`](docs/schema.dbml)).
 
 ```mermaid
 erDiagram
