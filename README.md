@@ -1,5 +1,7 @@
 # Order & Inventory Reservation Service
 
+[![CI](https://github.com/muhammadnuruz/order-and-inventory-service/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadnuruz/order-and-inventory-service/actions/workflows/ci.yml)
+
 Backend for a mini marketplace: products, multi-item orders with stock reservation,
 idempotent order creation, cancellation, automatic expiry of unpaid orders and
 real-time stock updates over WebSocket.
@@ -379,6 +381,16 @@ idempotency key, key reuse with a different body, per-user key scope, full rollb
 failure, crossing multi-item orders (deadlock check), 5 parallel cancels, ownership,
 pay/cancel transitions, expiry job, HTTP status codes and headers, cache fail-open, and
 WebSocket auth.
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and push to `main`:
+
+1. **lint**: `ruff check`, `ruff format --check`, `mypy app`.
+2. **test**: Postgres 16 service container, `alembic upgrade head` + `alembic check`
+   (models and migrations must match), then `pytest`.
+3. **docker**: builds and starts the whole compose stack, checks `/health/ready` and runs
+   `scripts/load_test.py` through nginx on `:8080` (must be exactly 10 × `201` out of 50).
 
 ## Trade-offs and possible next steps
 
